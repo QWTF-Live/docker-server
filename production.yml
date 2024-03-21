@@ -19,13 +19,11 @@ services:
       - tourney-demos:/updater/demos/tourney/
       - scrim-demos:/updater/demos/scrim/
       - duel-demos:/updater/demos/duel/
-      - quad-demos:/updater/demos/quad/
       - staging-demos:/updater/demos/staging/
       - pub-stats:/updater/stats/pub/
       - tourney-stats:/updater/stats/tourney/
       - scrim-stats:/updater/stats/scrim/
       - duel-stats:/updater/stats/duel/
-      - quad-stats:/updater/stats/quad/
       - staging-stats:/updater/stats/staging/
     deploy:
       resources:
@@ -83,59 +81,6 @@ services:
       - master_dats:/fortressonesv/fortress/dats/
       - duel-demos:/fortressonesv/fortress/demos/
       - duel-stats:/fortressonesv/fortress/data/
-  quadserver:
-    image: fortressone/fortressonesv:latest
-    network_mode: host
-    depends_on:
-      - updater
-    stdin_open: true
-    tty: true
-    restart: always
-    command: |
-      -ip ${FO_IP}
-      -port 27502
-      +set hostname "${FO_HOSTNAME} Quad"
-      +set rcon_password "${FO_RCON_PASSWORD}"
-      +set sv_serverip "${FO_IP}:27502"
-      +localinfo adminpwd "${FO_ADMINPWD}"
-      +localinfo discord_channel_id "${FO_DISCORD_CHANNEL_ID}"
-      +localinfo demo_files_address "${FO_DEMO_FILES_ADDRESS}/${FO_REGION}/quad/"
-      +localinfo stats_files_address "${FO_STATS_FILES_ADDRESS}/${FO_REGION}/quad/"
-      +localinfo backend_address "${FO_BACKEND_ADDRESS}"
-      +exec fo_quadmode.cfg
-      +map 2fort5r
-    volumes:
-      - assets:/fortressonesv/fortress/assets/
-      - master_dats:/fortressonesv/fortress/dats/
-      - quad-demos:/fortressonesv/fortress/demos/
-      - quad-stats:/fortressonesv/fortress/data/
-  trickserver:
-    image: fortressone/fortressonesv:latest
-    network_mode: host
-    depends_on:
-      - updater
-    stdin_open: true
-    tty: true
-    restart: always
-    command: |
-      -ip ${FO_IP}
-      -port 27503
-      +set hostname "${FO_HOSTNAME} Trick"
-      +set rcon_password "${FO_RCON_PASSWORD}"
-      +set sv_serverip "${FO_IP}:27503"
-      +localinfo adminpwd "${FO_ADMINPWD}"
-      +localinfo discord_channel_id "${FO_DISCORD_CHANNEL_ID}"
-      +localinfo demo_files_address "${FO_DEMO_FILES_ADDRESS}/${FO_REGION}/trick/"
-      +localinfo stats_files_address "${FO_STATS_FILES_ADDRESS}/${FO_REGION}/trick/"
-      +localinfo backend_address "${FO_BACKEND_ADDRESS}"
-      +exec fo_trickmode.cfg
-      +sv_cheats 1
-      +map rj101
-    volumes:
-      - assets:/fortressonesv/fortress/assets/
-      - master_dats:/fortressonesv/fortress/dats/
-      - pub-demos:/fortressonesv/fortress/demos/
-      - pub-stats:/fortressonesv/fortress/data/
   tourneyserver:
     image: fortressone/fortressonesv:latest
     network_mode: host
@@ -228,13 +173,11 @@ services:
 volumes:
   pub-demos:
   duel-demos:
-  quad-demos:
   tourney-demos:
   scrim-demos:
   staging-demos:
   pub-stats:
   duel-stats:
-  quad-stats:
   tourney-stats:
   scrim-stats:
   staging-stats:
