@@ -2,7 +2,7 @@
 version: "3.7"
 services:
   updater:
-    image: fortressone/updater:latest
+    image: qwtflive/updater:latest
     restart: always
     environment:
       - AWS_SECRET_ACCESS_KEY
