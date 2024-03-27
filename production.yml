@@ -48,6 +48,7 @@ services:
       +localinfo demo_files_address "${FO_DEMO_FILES_ADDRESS}/${FO_REGION}/pub/"
       +localinfo stats_files_address "${FO_STATS_FILES_ADDRESS}/${FO_REGION}/pub/"
       +localinfo backend_address "${FO_BACKEND_ADDRESS}"
+      +localinfo shard "pub"
       +exec fo_pubmode.cfg
       +map 2fort5r
     volumes:
@@ -74,6 +75,7 @@ services:
       +localinfo demo_files_address "${FO_DEMO_FILES_ADDRESS}/${FO_REGION}/duel/"
       +localinfo stats_files_address "${FO_STATS_FILES_ADDRESS}/${FO_REGION}/duel/"
       +localinfo backend_address "${FO_BACKEND_ADDRESS}"
+      +localinfo shard "duel"
       +exec fo_duelmode.cfg
       +map 1on1r
     volumes:
@@ -101,6 +103,7 @@ services:
       +localinfo demo_files_address "${FO_DEMO_FILES_ADDRESS}/${FO_REGION}/tourney/"
       +localinfo stats_files_address "${FO_STATS_FILES_ADDRESS}/${FO_REGION}/tourney/"
       +localinfo backend_address "${FO_BACKEND_ADDRESS}"
+      +localinfo shard "tourney"
       +exec fo_quadmode.cfg
       +map 2fort5r
     volumes:
@@ -128,6 +131,7 @@ services:
       +localinfo demo_files_address "${FO_DEMO_FILES_ADDRESS}/${FO_REGION}/scrim/"
       +localinfo stats_files_address "${FO_STATS_FILES_ADDRESS}/${FO_REGION}/scrim/"
       +localinfo backend_address "${FO_BACKEND_ADDRESS}"
+      +localinfo shard "scrim"
       +exec fo_quadmode.cfg
       +map 2fort5r
     volumes:
@@ -154,6 +158,7 @@ services:
       +localinfo demo_files_address "${FO_DEMO_FILES_ADDRESS}/${FO_REGION}/staging/"
       +localinfo stats_files_address "${FO_STATS_FILES_ADDRESS}/${FO_REGION}/staging/"
       +localinfo backend_address "${FO_BACKEND_ADDRESS}"
+      +localinfo shard "staging"
       +exec fo_stagingmode.cfg
       +map 2fort5r
     volumes:
