@@ -43,6 +43,7 @@ services:
       +set hostname "${FO_HOSTNAME} Pub"
       +set rcon_password "${FO_RCON_PASSWORD}"
       +set sv_serverip "${FO_IP}"
+      +set timeout 10
       +localinfo adminpwd "${FO_ADMINPWD}"
       +localinfo discord_channel_id "${FO_DISCORD_CHANNEL_ID}"
       +localinfo demo_files_address "${FO_DEMO_FILES_ADDRESS}/${FO_REGION}/pub/"
@@ -70,6 +71,7 @@ services:
       +set hostname "${FO_HOSTNAME} Duel"
       +set rcon_password "${FO_RCON_PASSWORD}"
       +set sv_serverip "${FO_IP}:27501"
+      +set timeout 10
       +localinfo adminpwd "${FO_ADMINPWD}"
       +localinfo discord_channel_id "${FO_DISCORD_CHANNEL_ID}"
       +localinfo demo_files_address "${FO_DEMO_FILES_ADDRESS}/${FO_REGION}/duel/"
@@ -98,6 +100,7 @@ services:
       +set password "${FO_PASSWORD}"
       +set rcon_password "${FO_RCON_PASSWORD}"
       +set sv_serverip "${FO_IP}:27504"
+      +set timeout 10
       +localinfo adminpwd "${FO_ADMINPWD}"
       +localinfo discord_channel_id 1026405619231625257
       +localinfo demo_files_address "${FO_DEMO_FILES_ADDRESS}/${FO_REGION}/tourney/"
@@ -126,6 +129,7 @@ services:
       +set password "${FO_PASSWORD}"
       +set rcon_password "${FO_RCON_PASSWORD}"
       +set sv_serverip "${FO_IP}:27505"
+      +set timeout 10
       +localinfo adminpwd "${FO_ADMINPWD}"
       +localinfo discord_channel_id 1147341454851719219
       +localinfo demo_files_address "${FO_DEMO_FILES_ADDRESS}/${FO_REGION}/scrim/"
@@ -153,6 +157,7 @@ services:
       +set hostname "${FO_HOSTNAME} Staging"
       +set rcon_password "${FO_RCON_PASSWORD}"
       +set sv_serverip "${FO_IP}:27510"
+      +set timeout 10
       +localinfo adminpwd "${FO_ADMINPWD}"
       +localinfo discord_channel_id "${FO_DISCORD_CHANNEL_ID}"
       +localinfo demo_files_address "${FO_DEMO_FILES_ADDRESS}/${FO_REGION}/staging/"
