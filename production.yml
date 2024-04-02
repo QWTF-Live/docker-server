@@ -28,7 +28,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.10'
+          memory: '50m'
   pubserver:
     image: fortressone/fortressonesv:latest
     network_mode: host
