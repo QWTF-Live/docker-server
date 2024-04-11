@@ -43,6 +43,7 @@ services:
       +set hostname "${FO_HOSTNAME} Pub"
       +set rcon_password "${FO_RCON_PASSWORD}"
       +set sv_serverip "${FO_IP}"
+      +set net_mtu "${TFL_MTU:-1440}"
       +set timeout 10
       +localinfo adminpwd "${FO_ADMINPWD}"
       +localinfo discord_channel_id "${FO_DISCORD_CHANNEL_ID}"
@@ -71,6 +72,7 @@ services:
       +set hostname "${FO_HOSTNAME} Duel"
       +set rcon_password "${FO_RCON_PASSWORD}"
       +set sv_serverip "${FO_IP}:27501"
+      +set net_mtu "${TFL_MTU:-1440}"
       +set timeout 10
       +localinfo adminpwd "${FO_ADMINPWD}"
       +localinfo discord_channel_id "${FO_DISCORD_CHANNEL_ID}"
@@ -100,6 +102,7 @@ services:
       +set password "${FO_PASSWORD}"
       +set rcon_password "${FO_RCON_PASSWORD}"
       +set sv_serverip "${FO_IP}:27504"
+      +set net_mtu "${TFL_MTU:-1440}"
       +set timeout 10
       +localinfo adminpwd "${FO_ADMINPWD}"
       +localinfo discord_channel_id 1026405619231625257
@@ -129,6 +132,7 @@ services:
       +set password "${FO_PASSWORD}"
       +set rcon_password "${FO_RCON_PASSWORD}"
       +set sv_serverip "${FO_IP}:27505"
+      +set net_mtu "${TFL_MTU:-1440}"
       +set timeout 10
       +localinfo adminpwd "${FO_ADMINPWD}"
       +localinfo discord_channel_id 1147341454851719219
@@ -157,6 +161,7 @@ services:
       +set hostname "${FO_HOSTNAME} Staging"
       +set rcon_password "${FO_RCON_PASSWORD}"
       +set sv_serverip "${FO_IP}:27510"
+      +set net_mtu "${TFL_MTU:-1440}"
       +set timeout 10
       +localinfo adminpwd "${FO_ADMINPWD}"
       +localinfo discord_channel_id "${FO_DISCORD_CHANNEL_ID}"
