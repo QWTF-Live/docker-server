@@ -1,7 +1,8 @@
 #!/bin/bash
 function work() {
   docker pull qwtflive/updater
-  source ../*.env.production
+  source ../tfl_host.env
+  source ../qwtflive.env.production
   docker-compose -f production.yml down
   docker-compose -f production.yml up -d
 }

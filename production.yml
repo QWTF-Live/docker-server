@@ -11,6 +11,10 @@ services:
       - S3_STATS_URI
       - FO_REGION
       - FO_STATS_FILES_ADDRESS
+      - GODADDY_KEY
+      - GODADDY_SECRET
+      - GODADDY_DOMAIN
+      - GODADDY_NAME
     volumes:
       - assets:/updater/map-repo/fortress/
       - master_dats:/updater/dats/master/
