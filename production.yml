@@ -9,10 +9,10 @@ services:
       - AWS_ACCESS_KEY_ID
       - S3_DEMO_URI
       - FO_REGION
-      - GODADDY_KEY
-      - GODADDY_SECRET
-      - GODADDY_DOMAIN
-      - GODADDY_NAME
+      - CF_EMAIL
+      - CF_TOKEN
+      - CF_ZONE
+      - TFL_HOST
     volumes:
       - assets:/updater/map-repo/fortress/
       - master_dats:/updater/dats/master/
