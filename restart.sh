@@ -1,6 +1,8 @@
 #!/bin/bash
 function work() {
   docker pull qwtflive/updater
+  docker pull qwtflive/qwtfsv
+  docker image prune -f
   source ../tfl_host.env
   source ../qwtflive.env.production
   docker-compose -f production.yml down

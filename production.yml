@@ -32,7 +32,7 @@ services:
         limits:
           cpus: '0.10'
   pubserver:
-    image: fortressone/fortressonesv:latest
+    image: qwtflive/qwtfsv:latest
     network_mode: host
     depends_on:
       - updater
@@ -49,18 +49,17 @@ services:
       +set timeout 10
       +localinfo adminpwd "${FO_ADMINPWD}"
       +localinfo discord_channel_id "${FO_DISCORD_CHANNEL_ID}"
-      +localinfo demo_files_address "${FO_DEMO_FILES_ADDRESS}/${FO_REGION}/pub/"
       +localinfo backend_address "${FO_BACKEND_ADDRESS}"
       +localinfo shard "pub"
       +exec fo_pubmode.cfg
       +map 2fort5r
     volumes:
-      - assets:/fortressonesv/fortress/assets/
-      - master_dats:/fortressonesv/fortress/dats/
-      - pub-demos:/fortressonesv/fortress/demos/
-      - pub-stats:/fortressonesv/fortress/data/
+      - assets:/qwtfsv/fortress/assets/
+      - master_dats:/qwtfsv/fortress/dats/
+      - pub-demos:/qwtfsv/fortress/demos/
+      - pub-stats:/qwtfsv/fortress/data/
   duelserver:
-    image: fortressone/fortressonesv:latest
+    image: qwtflive/qwtfsv:latest
     network_mode: host
     depends_on:
       - updater
@@ -77,18 +76,17 @@ services:
       +set timeout 10
       +localinfo adminpwd "${FO_ADMINPWD}"
       +localinfo discord_channel_id "${FO_DISCORD_CHANNEL_ID}"
-      +localinfo demo_files_address "${FO_DEMO_FILES_ADDRESS}/${FO_REGION}/duel/"
       +localinfo backend_address "${FO_BACKEND_ADDRESS}"
       +localinfo shard "duel"
       +exec fo_duelmode.cfg
       +map 1on1r
     volumes:
-      - assets:/fortressonesv/fortress/assets/
-      - master_dats:/fortressonesv/fortress/dats/
-      - duel-demos:/fortressonesv/fortress/demos/
-      - duel-stats:/fortressonesv/fortress/data/
+      - assets:/qwtfsv/fortress/assets/
+      - master_dats:/qwtfsv/fortress/dats/
+      - duel-demos:/qwtfsv/fortress/demos/
+      - duel-stats:/qwtfsv/fortress/data/
   tourneyserver:
-    image: fortressone/fortressonesv:latest
+    image: qwtflive/qwtfsv:latest
     network_mode: host
     depends_on:
       - updater
@@ -106,18 +104,17 @@ services:
       +set timeout 10
       +localinfo adminpwd "${FO_ADMINPWD}"
       +localinfo discord_channel_id 1026405619231625257
-      +localinfo demo_files_address "${FO_DEMO_FILES_ADDRESS}/${FO_REGION}/tourney/"
       +localinfo backend_address "${FO_BACKEND_ADDRESS}"
       +localinfo shard "tourney"
       +exec fo_quadmode.cfg
       +map 2fort5r
     volumes:
-      - assets:/fortressonesv/fortress/assets/
-      - master_dats:/fortressonesv/fortress/dats/
-      - tourney-demos:/fortressonesv/fortress/demos/
-      - tourney-stats:/fortressonesv/fortress/data/
+      - assets:/qwtfsv/fortress/assets/
+      - master_dats:/qwtfsv/fortress/dats/
+      - tourney-demos:/qwtfsv/fortress/demos/
+      - tourney-stats:/qwtfsv/fortress/data/
   scrimserver:
-    image: fortressone/fortressonesv:latest
+    image: qwtflive/qwtfsv:latest
     network_mode: host
     depends_on:
       - updater
@@ -135,18 +132,17 @@ services:
       +set timeout 10
       +localinfo adminpwd "${FO_ADMINPWD}"
       +localinfo discord_channel_id 1147341454851719219
-      +localinfo demo_files_address "${FO_DEMO_FILES_ADDRESS}/${FO_REGION}/scrim/"
       +localinfo backend_address "${FO_BACKEND_ADDRESS}"
       +localinfo shard "scrim"
       +exec fo_quadmode.cfg
       +map 2fort5r
     volumes:
-      - assets:/fortressonesv/fortress/assets/
-      - staging_dats:/fortressonesv/fortress/dats/
-      - scrim-demos:/fortressonesv/fortress/demos/
-      - scrim-stats:/fortressonesv/fortress/data/
+      - assets:/qwtfsv/fortress/assets/
+      - staging_dats:/qwtfsv/fortress/dats/
+      - scrim-demos:/qwtfsv/fortress/demos/
+      - scrim-stats:/qwtfsv/fortress/data/
   stagingserver:
-    image: fortressone/fortressonesv:latest
+    image: qwtflive/qwtfsv:latest
     network_mode: host
     depends_on:
       - updater
@@ -163,16 +159,15 @@ services:
       +set timeout 10
       +localinfo adminpwd "${FO_ADMINPWD}"
       +localinfo discord_channel_id "${FO_DISCORD_CHANNEL_ID}"
-      +localinfo demo_files_address "${FO_DEMO_FILES_ADDRESS}/${FO_REGION}/staging/"
       +localinfo backend_address "${FO_BACKEND_ADDRESS}"
       +localinfo shard "staging"
       +exec fo_stagingmode.cfg
       +map 2fort5r
     volumes:
-      - assets:/fortressonesv/fortress/assets/
-      - staging_dats:/fortressonesv/fortress/dats/
-      - staging-demos:/fortressonesv/fortress/demos/
-      - staging-stats:/fortressonesv/fortress/data/
+      - assets:/qwtfsv/fortress/assets/
+      - staging_dats:/qwtfsv/fortress/dats/
+      - staging-demos:/qwtfsv/fortress/demos/
+      - staging-stats:/qwtfsv/fortress/data/
   qwfwd:
     image: fortressone/qwfwd:latest
     network_mode: host
