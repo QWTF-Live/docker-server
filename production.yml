@@ -42,6 +42,7 @@ services:
     command: |
       -ip ${FO_IP}
       -port 27500
+      +set sv_port_tcp 27500
       +set hostname "${FO_HOSTNAME} Pub"
       +set rcon_password "${FO_RCON_PASSWORD}"
       +set sv_serverip "${FO_IP}"
@@ -69,6 +70,7 @@ services:
     command: |
       -ip ${FO_IP}
       -port 27501
+      +set sv_port_tcp 27501
       +set hostname "${FO_HOSTNAME} Duel"
       +set rcon_password "${FO_RCON_PASSWORD}"
       +set sv_serverip "${FO_IP}:27501"
@@ -96,6 +98,7 @@ services:
     command: |
       -ip ${FO_IP}
       -port 27504
+      +set sv_port_tcp 27504
       +set hostname "${FO_HOSTNAME} Tourney"
       +set password "${FO_PASSWORD}"
       +set rcon_password "${FO_RCON_PASSWORD}"
@@ -124,6 +127,7 @@ services:
     command: |
       -ip ${FO_IP}
       -port 27505
+      +set sv_port_tcp 27505
       +set hostname "${FO_HOSTNAME} Scrim"
       +set password "${FO_PASSWORD}"
       +set rcon_password "${FO_RCON_PASSWORD}"
@@ -152,6 +156,7 @@ services:
     command: |
       -ip ${FO_IP}
       -port 27510
+      +set sv_port_tcp 27510
       +set hostname "${FO_HOSTNAME} Staging"
       +set rcon_password "${FO_RCON_PASSWORD}"
       +set sv_serverip "${FO_IP}:27510"
