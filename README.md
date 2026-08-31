@@ -25,14 +25,14 @@ Edit `.env.example` and save it as `.env`.
 #### Start server
 
 ```sh
-docker-compose up -d
+docker compose up -d
 ```
 
 
 #### Tail logs
 
 ```sh
-docker-compose logs -f
+docker compose logs -f
 ```
 
 
@@ -48,7 +48,7 @@ docker attach <container name>
 #### Stop server
 
 ```sh
-docker-compose down
+docker compose down
 ```
 
 
@@ -85,14 +85,14 @@ source .env.production
 #### Start server
 
 ```sh
-docker-compose -f production.yml up -d
+docker compose -f production.yml up -d
 ```
 
 
 #### Tail logs
 
 ```sh
-docker-compose -f production.yml logs -f
+docker compose -f production.yml logs -f
 ```
 
 
@@ -115,7 +115,7 @@ docker attach <container>
 #### Stop
 
 ```sh
-docker-compose -f production.yml down
+docker compose -f production.yml down
 ```
 
 
@@ -140,7 +140,7 @@ Install [Docker Machine](https://docs.docker.com/v17.09/machine/install-machine/
 - Edit `.env.production` and source
 - Run `eval $(docker-machine env <name>)`
 - Run `docker-machine active` to confirm connection
-- Run `docker-compose -f production.yaml up -d && docker-compose -f prodction.yaml logs -tf` to start it up.
+- Run `docker compose -f production.yaml up -d && docker compose -f prodction.yaml logs -tf` to start it up.
 - Run `docker exec -it docker-server_updater_1 /updater/sync.sh` to update progs
 - Update cloudflare to point to newly created EC2 instance
 - New regions aren't being added to docker-machine, but generic instructions beow still work.
@@ -308,5 +308,5 @@ E.G. for 2021 Virginia I did:
 - Update DNS with new IP at cloudflare
 - .env file shouldn't change (credentials in env file are for storage).
 - `source .env.virginia; eval $(docker-machine env virginia)`
-- `docker-compose -f production.yml up -d`
+- `docker compose -f production.yml up -d`
 - Close old account in My Account

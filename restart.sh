@@ -5,8 +5,8 @@ function work() {
   docker image prune -f
   source ../tfl_host.env
   source ../qwtflive.env.production
-  docker-compose -f production.yml down
-  docker-compose -f production.yml up -d
+  docker compose -f production.yml down
+  docker compose -f production.yml up -d
 }
 WORK=$(declare -f work)
 

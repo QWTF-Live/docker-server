@@ -10,9 +10,9 @@ source "$DIR/shared"
 source_and_deploy () {
   source_docker_machine_env "${1}"
   source_docker_compose_env "${1}"
-  docker-compose -f production.yml down --remove-orphans
-  docker-compose -f production.yml pull
-  docker-compose -f production.yml up -d
+  docker compose -f production.yml down --remove-orphans
+  docker compose -f production.yml pull
+  docker compose -f production.yml up -d
 }
 
 for m in "${aws_machines[@]}"

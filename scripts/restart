@@ -10,7 +10,7 @@ source "$DIR/shared"
 restart_docker_compose () {
   source_docker_machine_env "${1}"
   source_docker_compose_env "${1}"
-  docker-compose -f production.yml restart
+  docker compose -f production.yml restart
 }
 
 for m in "${aws_machines[@]}"
