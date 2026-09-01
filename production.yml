@@ -82,7 +82,7 @@ services:
       +map 1on1r
     volumes:
       - assets:/qwtfsv/fortress/assets/
-      - master_dats:/qwtfsv/fortress/dats/
+      - staging_dats:/qwtfsv/fortress/dats/
       - duel-demos:/qwtfsv/fortress/demos/
       - duel-stats:/qwtfsv/fortress/data/
   tourneyserver:
