@@ -161,7 +161,7 @@ services:
       +localinfo adminpwd "${FO_ADMINPWD}"
       +localinfo discord_channel_id "${FO_DISCORD_CHANNEL_ID}"
       +localinfo shard "staging"
-      +exec fo_stagingmode.cfg
+      +exec fo_quadmode.cfg
       +map 2fort5r
     volumes:
       - assets:/qwtfsv/fortress/assets/
