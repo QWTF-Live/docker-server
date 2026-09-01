@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 
-cat ".env.${1}"
-echo "$(docker-machine env "${1}")"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+cat "${DIR}/../.env.${1}"
+echo "export DOCKER_CONTEXT=${1}"

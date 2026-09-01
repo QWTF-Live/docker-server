@@ -1,3 +1,10 @@
+# Sourced by the other scripts in this directory.
+
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Picked up by `docker compose` so the scripts work from any directory.
+export COMPOSE_FILE="${REPO_DIR}/production.yml"
+
 aws_machines=( melbourne sydney california mumbai saopaulo stockholm ireland tokyo virginia london )
 other_machines=( guam dallas )
 
@@ -6,13 +13,16 @@ source_aws_env () {
   echo "AWS_PROFILE set to ${AWS_PROFILE}"
 }
 
-source_docker_machine_env () {
-  eval "$(docker-machine env "${1}")"
-  echo Active docker machine: "$(docker-machine active)"
+# docker-machine is archived; hosts are reached through docker contexts instead.
+# Create one per host with:
+#   docker context create <name> --docker "host=ssh://<user>@<host>"
+source_docker_host () {
+  export DOCKER_CONTEXT="${1}"
+  echo "Active docker context: ${DOCKER_CONTEXT}"
 }
 
 source_docker_compose_env () {
-  local source_file=".env.${1}"
-  source ${source_file}
+  local source_file="${REPO_DIR}/.env.${1}"
   echo "Sourcing ${source_file}"
+  source "${source_file}"
 }

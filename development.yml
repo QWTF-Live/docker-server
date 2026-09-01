@@ -1,5 +1,5 @@
----
-version: "3.7"
+name: docker-server
+
 services:
   updater:
     image: updater:latest

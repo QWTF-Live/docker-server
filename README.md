@@ -2,9 +2,10 @@
 
 ## Dependencies
 
-- [Docker Engine](https://docs.docker.com/compose/install/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-- Optionally GitLab's fork of the deprecated [Docker Machine](https://gitlab.com/gitlab-org/ci-cd/docker-machine)
+- [Docker Engine](https://docs.docker.com/engine/install/)
+- [Docker Compose v2](https://docs.docker.com/compose/install/), i.e. the
+  `docker compose` plugin. The standalone `docker-compose` binary is no longer
+  used anywhere in this repo.
 
 
 ## Development
@@ -54,16 +55,15 @@ docker compose down
 
 ## Production
 
-Runs seven automatically updated FortressOne FTE QuakeWorld servers in
-different modes and QWfwd proxy.
+Runs five automatically updated FortressOne FTE QuakeWorld servers in
+different modes, plus a QWfwd proxy.
 
 | Mode     | Port  |
 | -------  | ----- |
 | Pub      | 27500 |
 | Duel     | 27501 |
-| Quad     | 27502 |
-| Trick    | 27503 |
 | Tourney  | 27504 |
+| Scrim    | 27505 |
 | Staging  | 27510 |
 | QWfwd    | 30000 |
 
@@ -122,155 +122,80 @@ docker compose -f production.yml down
 ## Force run updater
 
 ```sh
-docker exec -it docker-server_updater_1 /updater/sync.sh
+docker compose -f production.yml exec updater /updater/sync.sh
 ```
 
 
 ## Create a new server instance in the cloud
 
-Install [Docker Machine](https://docs.docker.com/v17.09/machine/install-machine/).
+Hosts are reached with [docker contexts](https://docs.docker.com/engine/manage-resources/contexts/)
+over SSH. `docker-machine` is archived and is no longer used.
+
+- Create the VM (EC2, Linode, whatever) with 27500, 27501, 27504, 27505 and
+  27510 open on **both** udp and tcp, plus 30000/udp for QWfwd
+- Create a user with passwordless sudo, add your public key to its
+  `~/.ssh/authorized_keys`, and put it in the `docker` group
+- Install Docker Engine and the Compose plugin on the host
+- Register a context named after the region:
+
+```sh
+docker context create sydney --docker "host=ssh://ubuntu@sydney.fortressone.org"
+docker context inspect sydney   # confirm the connection works
+```
+
+- Copy `.env.production_example` to `.env.<region>` and fill it in
+- Bring it up:
+
+```sh
+source .env.<region>
+export DOCKER_CONTEXT=<region>
+docker compose -f production.yml up -d
+docker compose -f production.yml logs -tf
+```
+
+- Run the updater once to pull down progs and maps:
+  `docker compose -f production.yml exec updater /updater/sync.sh`
+- Point the region's DNS record at the new instance in Cloudflare
+
+`unset DOCKER_CONTEXT` (or `docker context use default`) to go back to the local
+daemon.
 
 
 ### AWS
 
-- Create an IAM user with admin access
-- Run `docker-machine create` with arguments as in the examples below, or
-  create an EC2 instance and open up ports 27500-27504, 27510 on
-  udp and tcp
-- Edit `.env.production` and source
-- Run `eval $(docker-machine env <name>)`
-- Run `docker-machine active` to confirm connection
-- Run `docker compose -f production.yaml up -d && docker compose -f prodction.yaml logs -tf` to start it up.
-- Run `docker exec -it docker-server_updater_1 /updater/sync.sh` to update progs
-- Update cloudflare to point to newly created EC2 instance
-- New regions aren't being added to docker-machine, but generic instructions beow still work.
+`scripts/open-ports` opens the game ports on an existing security group. When
+creating instances by hand, open 27500-27505 and 27510 on udp and tcp, and
+30000/udp.
 
 
-E.G. I used this for Sydney:
-```
-docker-machine create \
-  --driver amazonec2 \
-  --amazonec2-access-key AKIA5Q3DPGBMILTLCFE2 \
-  --amazonec2-secret-key AatUNhC/VPut45Mnw8OEgNdMEqguDU6AdEnxL9qL \
-  --amazonec2-root-size 30 \
-  --amazonec2-region ap-southeast-2 \
-  --amazonec2-open-port 27500/udp \
-  --amazonec2-open-port 27500 \
-  --amazonec2-open-port 27501/udp \
-  --amazonec2-open-port 27501 \
-  --amazonec2-open-port 27502/udp \
-  --amazonec2-open-port 27502 \
-  --amazonec2-open-port 27503/udp \
-  --amazonec2-open-port 27503 \
-  --amazonec2-open-port 27504/udp \
-  --amazonec2-open-port 27504 \
-  --amazonec2-open-port 27510/udp \
-  --amazonec2-open-port 27510 \
-  --amazonec2-open-port 30000/udp \
-  --amazonec2-open-port 28000 \
-  sydney
-```
+### Linode
 
-Tokyo:
-```
-docker-machine create \
-  --driver amazonec2 \
-  --amazonec2-access-key <AWS_ACCESS_KEY> \
-  --amazonec2-secret-key <AWS_SECRET_KEY> \
-  --amazonec2-root-size 30 \
-  --amazonec2-region ap-northeast-1 \
-  --amazonec2-open-port 27500/udp \
-  --amazonec2-open-port 27500 \
-  --amazonec2-open-port 27501/udp \
-  --amazonec2-open-port 27501 \
-  --amazonec2-open-port 27502/udp \
-  --amazonec2-open-port 27502 \
-  --amazonec2-open-port 27503/udp \
-  --amazonec2-open-port 27503 \
-  --amazonec2-open-port 27504/udp \
-  --amazonec2-open-port 27504 \
-  --amazonec2-open-port 27510/udp \
-  --amazonec2-open-port 27510 \
-  --amazonec2-open-port 30000/udp \
-  --amazonec2-open-port 28000 \
-  tokyo
-```
-
-This for Stockholm, with non-default VPC and where t2.micro isn't available:
-```
-docker-machine create \
-  --driver amazonec2 \
-  --amazonec2-instance-type t3.micro \
-  --amazonec2-vpc-id <VPC_ID> \
-  --amazonec2-access-key <AWS_ACCESS_KEY> \
-  --amazonec2-secret-key <AWS_SECRET_KEY> \
-  --amazonec2-root-size 30 \
-  --amazonec2-region eu-north-1 \
-  --amazonec2-open-port 27500/udp \
-  --amazonec2-open-port 27500 \
-  --amazonec2-open-port 27501/udp \
-  --amazonec2-open-port 27501 \
-  --amazonec2-open-port 27502/udp \
-  --amazonec2-open-port 27502 \
-  --amazonec2-open-port 27503/udp \
-  --amazonec2-open-port 27503 \
-  --amazonec2-open-port 27504/udp \
-  --amazonec2-open-port 27504 \
-  --amazonec2-open-port 27510/udp \
-  --amazonec2-open-port 27510 \
-  --amazonec2-open-port 30000/udp \
-  --amazonec2-open-port 28000 \
-  stockholm
-```
-
-I used this for Dallas Linode:
-
-```
-docker-machine create \
-  --driver linode \
-  --linode-token <LINODE_API_TOKEN> \
-  --linode-instance-type g6-nanode-1 \
-  --linode-region us-central \
-  dallas
-```
-
-N.B. On linode if you get:
-
-```
-Error creating machine: Error running provisioning: Unable to verify the Docker daemon is listening: Maximum number of retries (10) exceeded
-```
-
-Just restart the VPS and it should work after that.
-
-
-For a generic server:
-- Create user with passwordless sudo access
-- Add public key to ~/.ssh/authorized_hosts
-
-I used this for guam:
-
-```
-docker-machine create \
-  --driver generic \
-  --generic-ip-address guam.fortressone.org \
-  --generic-ssh-user <HOST_USERNAME> \
-  guam
-```
+If Docker fails to come up right after provisioning
+(`Unable to verify the Docker daemon is listening`), restart the VPS and try
+again.
 
 
 ## Scripts
 
-### Opening ports on AWS
+The scripts in `scripts/` iterate over every host listed in `scripts/shared`,
+switching `DOCKER_CONTEXT` and sourcing `.env.<name>` for each one. They need a
+docker context and a `.env.<name>` file per host.
 
-See `scripts/open-ports`
+| Script | Does |
+| ------ | ---- |
+| `scripts/deploy` | `down --remove-orphans`, `pull`, `up -d` on every host |
+| `scripts/restart` | `docker compose restart` on every host |
+| `scripts/update` | force-runs the updater on every host |
+| `scripts/stats` | `docker stats` for every host |
+| `scripts/open-ports` | opens the game ports in the AWS security group |
 
 
-### Set up environment for docker-machine
+### Set up the environment for a single host
 
-Requires a `.env.<docker-machine name>` file with FO environment variables set.
+Requires a `.env.<context name>` file with the FO environment variables set.
 
 ```sh
-source scripts/connect <docker-machine name>
+source scripts/connect <context name>
 ```
 
 
@@ -303,10 +228,10 @@ E.G. for 2021 Virginia I did:
   - Group name: admin
   - Tick AdministratorAccess
 - Save credentials
-- Delete old instance: `docker-machine rm virginia`
-- Run `docker-machine create` command from above, with new credentials, region and name
+- Terminate the old EC2 instance
+- Create a new instance and docker context as above, with the new credentials and region
 - Update DNS with new IP at cloudflare
 - .env file shouldn't change (credentials in env file are for storage).
-- `source .env.virginia; eval $(docker-machine env virginia)`
+- `source .env.virginia; export DOCKER_CONTEXT=virginia`
 - `docker compose -f production.yml up -d`
 - Close old account in My Account

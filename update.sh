@@ -1,3 +1,5 @@
 #!/bin/bash
 
-docker exec -it docker-server_updater_1 /updater/sync.sh
+cd "$(dirname "$0")" || exit 1
+
+docker compose -f production.yml exec updater /updater/sync.sh
