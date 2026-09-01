@@ -50,7 +50,6 @@ services:
       +set timeout 10
       +localinfo adminpwd "${FO_ADMINPWD}"
       +localinfo discord_channel_id "${FO_DISCORD_CHANNEL_ID}"
-      +localinfo backend_address "${FO_BACKEND_ADDRESS}"
       +localinfo shard "pub"
       +exec fo_pubmode.cfg
       +map 2fort5r
@@ -78,7 +77,6 @@ services:
       +set timeout 10
       +localinfo adminpwd "${FO_ADMINPWD}"
       +localinfo discord_channel_id "${FO_DISCORD_CHANNEL_ID}"
-      +localinfo backend_address "${FO_BACKEND_ADDRESS}"
       +localinfo shard "duel"
       +exec fo_duelmode.cfg
       +map 1on1r
@@ -107,7 +105,6 @@ services:
       +set timeout 10
       +localinfo adminpwd "${FO_ADMINPWD}"
       +localinfo discord_channel_id 1026405619231625257
-      +localinfo backend_address "${FO_BACKEND_ADDRESS}"
       +localinfo shard "tourney"
       +exec fo_quadmode.cfg
       +map 2fort5r
@@ -136,7 +133,6 @@ services:
       +set timeout 10
       +localinfo adminpwd "${FO_ADMINPWD}"
       +localinfo discord_channel_id 1147341454851719219
-      +localinfo backend_address "${FO_BACKEND_ADDRESS}"
       +localinfo shard "scrim"
       +exec fo_quadmode.cfg
       +map 2fort5r
@@ -164,7 +160,6 @@ services:
       +set timeout 10
       +localinfo adminpwd "${FO_ADMINPWD}"
       +localinfo discord_channel_id "${FO_DISCORD_CHANNEL_ID}"
-      +localinfo backend_address "${FO_BACKEND_ADDRESS}"
       +localinfo shard "staging"
       +exec fo_stagingmode.cfg
       +map 2fort5r
