@@ -43,6 +43,7 @@ services:
       -ip ${FO_IP}
       -port 27500
       +set sv_port_tcp 27500
+      +set net_enable_tls 1
       +set hostname "${FO_HOSTNAME} Pub"
       +set rcon_password "${FO_RCON_PASSWORD}"
       +set sv_serverip "${FO_IP}"
@@ -54,6 +55,8 @@ services:
       +exec fo_pubmode.cfg
       +map 2fort5r
     volumes:
+      - /etc/fortressone-tls/fullchain.pem:/qwtfsv/fullchain.pem:ro
+      - /etc/fortressone-tls/privkey.pem:/qwtfsv/privkey.pem:ro
       - assets:/qwtfsv/fortress/assets/
       - master_dats:/qwtfsv/fortress/dats/
       - pub-demos:/qwtfsv/fortress/demos/
@@ -70,6 +73,7 @@ services:
       -ip ${FO_IP}
       -port 27501
       +set sv_port_tcp 27501
+      +set net_enable_tls 1
       +set hostname "${FO_HOSTNAME} Duel"
       +set rcon_password "${FO_RCON_PASSWORD}"
       +set sv_serverip "${FO_IP}:27501"
@@ -81,6 +85,8 @@ services:
       +exec fo_duelmode.cfg
       +map 1on1r
     volumes:
+      - /etc/fortressone-tls/fullchain.pem:/qwtfsv/fullchain.pem:ro
+      - /etc/fortressone-tls/privkey.pem:/qwtfsv/privkey.pem:ro
       - assets:/qwtfsv/fortress/assets/
       - staging_dats:/qwtfsv/fortress/dats/
       - duel-demos:/qwtfsv/fortress/demos/
@@ -97,6 +103,7 @@ services:
       -ip ${FO_IP}
       -port 27504
       +set sv_port_tcp 27504
+      +set net_enable_tls 1
       +set hostname "${FO_HOSTNAME} Tourney"
       +set password "${FO_PASSWORD}"
       +set rcon_password "${FO_RCON_PASSWORD}"
@@ -109,6 +116,8 @@ services:
       +exec fo_quadmode.cfg
       +map 2fort5r
     volumes:
+      - /etc/fortressone-tls/fullchain.pem:/qwtfsv/fullchain.pem:ro
+      - /etc/fortressone-tls/privkey.pem:/qwtfsv/privkey.pem:ro
       - assets:/qwtfsv/fortress/assets/
       - master_dats:/qwtfsv/fortress/dats/
       - tourney-demos:/qwtfsv/fortress/demos/
@@ -125,6 +134,7 @@ services:
       -ip ${FO_IP}
       -port 27505
       +set sv_port_tcp 27505
+      +set net_enable_tls 1
       +set hostname "${FO_HOSTNAME} Scrim"
       +set password "${FO_PASSWORD}"
       +set rcon_password "${FO_RCON_PASSWORD}"
@@ -137,6 +147,8 @@ services:
       +exec fo_quadmode.cfg
       +map 2fort5r
     volumes:
+      - /etc/fortressone-tls/fullchain.pem:/qwtfsv/fullchain.pem:ro
+      - /etc/fortressone-tls/privkey.pem:/qwtfsv/privkey.pem:ro
       - assets:/qwtfsv/fortress/assets/
       - staging_dats:/qwtfsv/fortress/dats/
       - scrim-demos:/qwtfsv/fortress/demos/
@@ -153,6 +165,7 @@ services:
       -ip ${FO_IP}
       -port 27510
       +set sv_port_tcp 27510
+      +set net_enable_tls 1
       +set hostname "${FO_HOSTNAME} Staging"
       +set rcon_password "${FO_RCON_PASSWORD}"
       +set sv_serverip "${FO_IP}:27510"
@@ -164,6 +177,8 @@ services:
       +exec fo_quadmode.cfg
       +map 2fort5r
     volumes:
+      - /etc/fortressone-tls/fullchain.pem:/qwtfsv/fullchain.pem:ro
+      - /etc/fortressone-tls/privkey.pem:/qwtfsv/privkey.pem:ro
       - assets:/qwtfsv/fortress/assets/
       - staging_dats:/qwtfsv/fortress/dats/
       - staging-demos:/qwtfsv/fortress/demos/
