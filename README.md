@@ -140,6 +140,28 @@ docker compose -f production.yml down
 ```
 
 
+## Migrating a host from the old layout
+
+The pre-single-container stack kept its data in thirteen named volumes, which
+`docker compose down` does not remove. `migrate-volumes.sh` folds them into
+`tf-data`, imports `/etc/letsencrypt` into the `letsencrypt` volume so certbot
+keeps the existing certificate rather than issuing a fresh one, and deletes the
+old volumes once each copy is verified.
+
+```sh
+./migrate-volumes.sh --dry-run   # say what would happen, touch nothing
+./migrate-volumes.sh             # migrate, then remove the old volumes
+./migrate-volumes.sh --keep      # migrate but leave the old volumes behind
+```
+
+`deploy` runs it before `restart.sh -f`, so a normal deploy migrates the host
+on its own. It is a no-op once there is nothing left to move, and on a host
+that never had the old layout.
+
+Nothing is deleted unless every file in it arrived at the destination, and
+existing files are never overwritten, so an interrupted run resumes.
+
+
 ## Force run updater
 
 ```sh
