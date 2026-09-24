@@ -28,7 +28,7 @@ services:
       - TF_ADMINPWD
       - TF_PASSWORD
       - TF_DISCORD_CHANNEL_ID
-      - TF_REGION
+      - TFL_DOMAIN
       - TF_DOMAIN
       - TFL_HOST
       - TFL_MTU
