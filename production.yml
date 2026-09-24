@@ -3,7 +3,7 @@ name: docker-server
 # Three services, not seven. The five game shards, the updater and the crash
 # reporter are all built from our own repos and released together, so they run
 # as one image with s6 supervising them; see qwtfsv/shards.conf for the shard
-# list and qwtfsv/bin/fo-shard for what each one is handed.
+# list and qwtfsv/bin/tf-shard for what each one is handed.
 #
 # What deliberately stays separate:
 #   certbot  upstream's image, so ACME and TLS fixes arrive with a pull instead
@@ -45,7 +45,7 @@ services:
       # the map/asset tree. Replaces the thirteen named volumes this file used
       # to need to pass files between the updater and the servers - in one
       # container that is just a directory.
-      - fo-data:/srv
+      - tf-data:/srv
       - letsencrypt:/certs:ro
 
   qwfwd:
@@ -99,5 +99,5 @@ services:
         done
 
 volumes:
-  fo-data:
+  tf-data:
   letsencrypt:
