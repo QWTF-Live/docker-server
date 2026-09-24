@@ -7,10 +7,27 @@ DIR="${BASH_SOURCE%/*}"
 if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
 source "$DIR/shared"
 
+CONTAINER=docker-server-fortressone-1
+
 print_stats () {
   source_docker_host "${1}"
   source_docker_compose_env "${1}"
   docker stats --no-stream
+
+  # The five shards share one container, so the row above is their total. This
+  # is the per-shard breakdown that `docker stats` used to give directly.
+  # ps reports CPU averaged over each process's lifetime, not an instantaneous
+  # sample, so read it for "which shard is heavy", not for a live spike.
+  docker exec "$CONTAINER" ps -eo pcpu,rss,etimes,args --sort=-pcpu 2>/dev/null \
+    | awk 'NR==1 { printf "\n%-10s %6s %9s %8s\n", "SHARD", "%CPU", "RSS", "UPTIME"; next }
+           /fteqw-sv/ {
+             shard = "?"
+             for (i = 1; i <= NF; i++) if ($i == "-homedir") { n = split($(i+1), p, "/"); shard = p[n] }
+             printf "%-10s %6s %8.0fM %7ds\n", shard, $1, $2/1024, $3
+           }
+           /entrypoint.sh|sync.sh|aws/ && !/awk/ { other += $1 }
+           END { if (other) printf "%-10s %6.1f\n", "updater", other }' \
+    || echo "    (no per-shard breakdown: ${CONTAINER} not running)"
 }
 
 for m in "${aws_machines[@]}"

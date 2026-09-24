@@ -56,7 +56,19 @@ docker compose down
 ## Production
 
 Runs five automatically updated FortressOne FTE QuakeWorld servers in
-different modes, plus a QWfwd proxy.
+different modes, plus a QWfwd proxy and certbot.
+
+The five shards, the updater and the crash reporter are one container
+(`qwtflive/fortressone`): they are all built from our own repos and released
+together, and sharing a filesystem is what lets the updater hand files to the
+servers without thirteen named volumes to pass them through. Each shard runs
+with its own FTE `-homedir` under `/srv/shards/<name>`, so its demos, stats,
+console log and crash cores stay its own. See `qwtfsv/shards.conf` for the
+shard list.
+
+certbot and QWfwd stay separate containers: certbot because TLS fixes should
+arrive with a `pull` rather than waiting on a rebuild of ours, QWfwd because it
+is not built from any repo here.
 
 | Mode     | Port  |
 | -------  | ----- |
@@ -103,13 +115,22 @@ docker ps
 ```
 
 
-#### Attach to container
+#### Server consoles
+
+`docker attach` cannot be used in production: five servers share one container,
+and so one stdin. Each shard reads from its own FIFO and writes its own log
+instead, and `console` joins the two back together.
 
 ```sh
-docker attach <container>
+docker exec -it docker-server-fortressone-1 console          # tmux, one window per shard
+docker exec -it docker-server-fortressone-1 console pub      # just pub
+docker exec    docker-server-fortressone-1 console pub status # send one command
 ```
 
-`ctrl-p` `ctrl-q` to detach.
+`ctrl-a n` walks the windows (the inner prefix is `ctrl-a` so it does not fight
+your own tmux), `ctrl-a d` detaches. Leaving a console never stops the server.
+
+For anything scripted prefer rcon, which is authenticated and works off-host.
 
 
 #### Stop
@@ -122,8 +143,29 @@ docker compose -f production.yml down
 ## Force run updater
 
 ```sh
-docker compose -f production.yml exec updater /updater/sync.sh
+docker compose -f production.yml exec fortressone /updater/sync.sh
 ```
+
+
+## TLS certificates
+
+The web live view connects to the game port over wss, which needs a
+certificate browsers trust. certbot issues and renews it over dns-01 through
+Cloudflare — http-01 is not available, as the hosts have no inbound port 80 —
+into the `letsencrypt` volume, which the server container mounts read-only.
+
+It needs `cloudflare.ini` next to `production.yml`, mode `600`, which `deploy`
+writes from `CF_TOKEN`:
+
+```ini
+dns_cloudflare_api_token = <token>
+```
+
+FTE reads the pem once at startup and has no reload command, so a renewal only
+takes effect on restart. The `certwatch` service inside the server container
+watches for a new certificate and restarts each shard the first time it sees it
+empty, so nobody loses a game to it. A shard that never empties is left for up
+to 12 hours before being restarted anyway.
 
 
 ## Create a new server instance in the cloud

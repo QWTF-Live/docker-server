@@ -6,13 +6,13 @@ services:
     stdin_open: true
     tty: true
     command: |
-      -ip "${FO_IP}"
-      +set hostname "${FO_HOSTNAME}"
-      +set rcon_password "${FO_RCON_PASSWORD}"
-      +set sv_serverip "${FO_IP}"
-      +localinfo adminpwd "${FO_ADMINPWD}"
+      -ip "${TF_IP}"
+      +set hostname "${TF_HOSTNAME}"
+      +set rcon_password "${TF_RCON_PASSWORD}"
+      +set sv_serverip "${TF_IP}"
+      +localinfo adminpwd "${TF_ADMINPWD}"
       +localinfo allowpracspawns 1
-      +localinfo discord_channel_id "${FO_DISCORD_CHANNEL_ID}"
+      +localinfo discord_channel_id "${TF_DISCORD_CHANNEL_ID}"
       +set sv_public 0
       +set sv_cheats 1
       +set sv_csqcdebug 1
@@ -22,10 +22,10 @@ services:
       - "27500:27500/udp"
     volumes:
       - type: bind
-        source: "${FO_DEV_DATS_PATH}"
+        source: "${TF_DEV_DATS_PATH}"
         target: /fortressonesv/fortress/dats/
       - type: bind
-        source: "${FO_DEV_ASSETS_PATH}"
+        source: "${TF_DEV_ASSETS_PATH}"
         target: /fortressonesv/fortress/assets/
     extra_hosts:
       - "host.docker.internal:host-gateway"

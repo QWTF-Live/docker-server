@@ -1,188 +1,53 @@
 name: docker-server
 
+# Three services, not seven. The five game shards, the updater and the crash
+# reporter are all built from our own repos and released together, so they run
+# as one image with s6 supervising them; see qwtfsv/shards.conf for the shard
+# list and qwtfsv/bin/fo-shard for what each one is handed.
+#
+# What deliberately stays separate:
+#   certbot  upstream's image, so ACME and TLS fixes arrive with a pull instead
+#            of waiting on a rebuild of ours
+#   qwfwd    not built from any repo here; we only ever pull it
+#
+# Console access is `docker exec -it docker-server-fortressone-1 console`,
+# which opens a tmux window per shard. `docker attach` cannot work with five
+# servers behind one stdin.
+
 services:
-  updater:
-    image: qwtflive/updater:latest
+  fortressone:
+    image: qwtflive/fortressone:latest
+    network_mode: host
+    stdin_open: true
+    tty: true
     restart: always
     environment:
-      - AWS_SECRET_ACCESS_KEY
+      - TF_IP
+      - TF_HOSTNAME
+      - TF_RCON_PASSWORD
+      - TF_ADMINPWD
+      - TF_PASSWORD
+      - TF_DISCORD_CHANNEL_ID
+      - TF_REGION
+      - TF_DOMAIN
+      - TFL_HOST
+      - TFL_MTU
       - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
       - S3_DEMO_URI
-      - FO_REGION
       - CF_EMAIL
       - CF_TOKEN
       - CF_ZONE
-      - TFL_HOST
+      - DISCORD_WEBHOOK_URL
     volumes:
-      - assets:/updater/map-repo/fortress/
-      - master_dats:/updater/dats/master/
-      - staging_dats:/updater/dats/staging/
-      - pub-demos:/updater/demos/pub/
-      - tourney-demos:/updater/demos/tourney/
-      - scrim-demos:/updater/demos/scrim/
-      - duel-demos:/updater/demos/duel/
-      - staging-demos:/updater/demos/staging/
-      - pub-stats:/updater/stats/pub/
-      - tourney-stats:/updater/stats/tourney/
-      - scrim-stats:/updater/stats/scrim/
-      - duel-stats:/updater/stats/duel/
-      - staging-stats:/updater/stats/staging/
-    deploy:
-      resources:
-        limits:
-          cpus: '0.10'
-  pubserver:
-    image: qwtflive/qwtfsv:latest
-    network_mode: host
-    depends_on:
-      - updater
-    stdin_open: true
-    tty: true
-    restart: always
-    command: |
-      -ip ${FO_IP}
-      -port 27500
-      +set sv_port_tcp 27500
-      +set net_enable_tls 1
-      +set hostname "${FO_HOSTNAME} Pub"
-      +set rcon_password "${FO_RCON_PASSWORD}"
-      +set sv_serverip "${FO_IP}"
-      +set net_mtu "${TFL_MTU:-1440}"
-      +set timeout 10
-      +localinfo adminpwd "${FO_ADMINPWD}"
-      +localinfo discord_channel_id "${FO_DISCORD_CHANNEL_ID}"
-      +localinfo shard "pub"
-      +exec fo_pubmode.cfg
-      +map 2fort5r
-    volumes:
-      - /etc/fortressone-tls/fullchain.pem:/qwtfsv/fullchain.pem:ro
-      - /etc/fortressone-tls/privkey.pem:/qwtfsv/privkey.pem:ro
-      - assets:/qwtfsv/fortress/assets/
-      - master_dats:/qwtfsv/fortress/dats/
-      - pub-demos:/qwtfsv/fortress/demos/
-      - pub-stats:/qwtfsv/fortress/data/
-  duelserver:
-    image: qwtflive/qwtfsv:latest
-    network_mode: host
-    depends_on:
-      - updater
-    stdin_open: true
-    tty: true
-    restart: always
-    command: |
-      -ip ${FO_IP}
-      -port 27501
-      +set sv_port_tcp 27501
-      +set net_enable_tls 1
-      +set hostname "${FO_HOSTNAME} Duel"
-      +set rcon_password "${FO_RCON_PASSWORD}"
-      +set sv_serverip "${FO_IP}:27501"
-      +set net_mtu "${TFL_MTU:-1440}"
-      +set timeout 10
-      +localinfo adminpwd "${FO_ADMINPWD}"
-      +localinfo discord_channel_id "${FO_DISCORD_CHANNEL_ID}"
-      +localinfo shard "duel"
-      +exec fo_duelmode.cfg
-      +map 1on1r
-    volumes:
-      - /etc/fortressone-tls/fullchain.pem:/qwtfsv/fullchain.pem:ro
-      - /etc/fortressone-tls/privkey.pem:/qwtfsv/privkey.pem:ro
-      - assets:/qwtfsv/fortress/assets/
-      - staging_dats:/qwtfsv/fortress/dats/
-      - duel-demos:/qwtfsv/fortress/demos/
-      - duel-stats:/qwtfsv/fortress/data/
-  tourneyserver:
-    image: qwtflive/qwtfsv:latest
-    network_mode: host
-    depends_on:
-      - updater
-    stdin_open: true
-    tty: true
-    restart: always
-    command: |
-      -ip ${FO_IP}
-      -port 27504
-      +set sv_port_tcp 27504
-      +set net_enable_tls 1
-      +set hostname "${FO_HOSTNAME} Tourney"
-      +set password "${FO_PASSWORD}"
-      +set rcon_password "${FO_RCON_PASSWORD}"
-      +set sv_serverip "${FO_IP}:27504"
-      +set net_mtu "${TFL_MTU:-1440}"
-      +set timeout 10
-      +localinfo adminpwd "${FO_ADMINPWD}"
-      +localinfo discord_channel_id 1026405619231625257
-      +localinfo shard "tourney"
-      +exec fo_quadmode.cfg
-      +map 2fort5r
-    volumes:
-      - /etc/fortressone-tls/fullchain.pem:/qwtfsv/fullchain.pem:ro
-      - /etc/fortressone-tls/privkey.pem:/qwtfsv/privkey.pem:ro
-      - assets:/qwtfsv/fortress/assets/
-      - master_dats:/qwtfsv/fortress/dats/
-      - tourney-demos:/qwtfsv/fortress/demos/
-      - tourney-stats:/qwtfsv/fortress/data/
-  scrimserver:
-    image: qwtflive/qwtfsv:latest
-    network_mode: host
-    depends_on:
-      - updater
-    stdin_open: true
-    tty: true
-    restart: always
-    command: |
-      -ip ${FO_IP}
-      -port 27505
-      +set sv_port_tcp 27505
-      +set net_enable_tls 1
-      +set hostname "${FO_HOSTNAME} Scrim"
-      +set password "${FO_PASSWORD}"
-      +set rcon_password "${FO_RCON_PASSWORD}"
-      +set sv_serverip "${FO_IP}:27505"
-      +set net_mtu "${TFL_MTU:-1440}"
-      +set timeout 10
-      +localinfo adminpwd "${FO_ADMINPWD}"
-      +localinfo discord_channel_id 1147341454851719219
-      +localinfo shard "scrim"
-      +exec fo_quadmode.cfg
-      +map 2fort5r
-    volumes:
-      - /etc/fortressone-tls/fullchain.pem:/qwtfsv/fullchain.pem:ro
-      - /etc/fortressone-tls/privkey.pem:/qwtfsv/privkey.pem:ro
-      - assets:/qwtfsv/fortress/assets/
-      - staging_dats:/qwtfsv/fortress/dats/
-      - scrim-demos:/qwtfsv/fortress/demos/
-      - scrim-stats:/qwtfsv/fortress/data/
-  stagingserver:
-    image: qwtflive/qwtfsv:latest
-    network_mode: host
-    depends_on:
-      - updater
-    stdin_open: true
-    tty: true
-    restart: always
-    command: |
-      -ip ${FO_IP}
-      -port 27510
-      +set sv_port_tcp 27510
-      +set net_enable_tls 1
-      +set hostname "${FO_HOSTNAME} Staging"
-      +set rcon_password "${FO_RCON_PASSWORD}"
-      +set sv_serverip "${FO_IP}:27510"
-      +set net_mtu "${TFL_MTU:-1440}"
-      +set timeout 10
-      +localinfo adminpwd "${FO_ADMINPWD}"
-      +localinfo discord_channel_id "${FO_DISCORD_CHANNEL_ID}"
-      +localinfo shard "staging"
-      +exec fo_quadmode.cfg
-      +map 2fort5r
-    volumes:
-      - /etc/fortressone-tls/fullchain.pem:/qwtfsv/fullchain.pem:ro
-      - /etc/fortressone-tls/privkey.pem:/qwtfsv/privkey.pem:ro
-      - assets:/qwtfsv/fortress/assets/
-      - staging_dats:/qwtfsv/fortress/dats/
-      - staging-demos:/qwtfsv/fortress/demos/
-      - staging-stats:/qwtfsv/fortress/data/
+      # One volume for everything that has to outlive a deploy: the shard
+      # homedirs (demos, stats, logs, cores), the dats the updater syncs, and
+      # the map/asset tree. Replaces the thirteen named volumes this file used
+      # to need to pass files between the updater and the servers - in one
+      # container that is just a directory.
+      - fo-data:/srv
+      - letsencrypt:/certs:ro
+
   qwfwd:
     image: fortressone/qwfwd:latest
     network_mode: host
@@ -191,18 +56,48 @@ services:
     restart: always
     command: |
       30000 0.0.0.0
-      +set hostname "${FO_HOSTNAME} QWfwd"
+      +set hostname "${TF_HOSTNAME} QWfwd"
+
+  certbot:
+    image: certbot/dns-cloudflare:latest
+    restart: always
+    environment:
+      - TF_IP
+      - CF_EMAIL
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - ./cloudflare.ini:/cloudflare.ini:ro
+    # http-01 is not available: the game hosts have no inbound port 80, so
+    # dns-01 through Cloudflare it is. Renewal is a no-op until the certificate
+    # is inside its window, so a twice-daily pass costs nothing and needs no
+    # scheduler of its own.
+    #
+    # Nothing here restarts the servers - FTE reads the pem once at startup and
+    # has no reload command. The certwatch service inside the fortressone
+    # container notices the new certificate and restarts each shard as it
+    # empties out, which is a judgement only something in that container can
+    # make. $$ escapes compose interpolation so the shell expands these.
+    entrypoint: ["/bin/sh", "-c"]
+    # A one-element list, not a bare string: compose word-splits a plain
+    # string command, which would hand /bin/sh -c just the word "while".
+    command:
+      - |
+        while :; do
+          if [ ! -s "/etc/letsencrypt/live/$$TF_IP/fullchain.pem" ]; then
+            echo "certbot: no certificate for $$TF_IP yet, requesting one"
+            certbot certonly --non-interactive --agree-tos \
+              --email "$$CF_EMAIL" \
+              --domain "$$TF_IP" \
+              --dns-cloudflare \
+              --dns-cloudflare-credentials /cloudflare.ini \
+              --dns-cloudflare-propagation-seconds 30 \
+              || echo "certbot: issuance failed; retrying in 12h"
+          else
+            certbot renew --quiet || echo "certbot: renewal failed; retrying in 12h"
+          fi
+          sleep 12h
+        done
+
 volumes:
-  pub-demos:
-  duel-demos:
-  tourney-demos:
-  scrim-demos:
-  staging-demos:
-  pub-stats:
-  duel-stats:
-  tourney-stats:
-  scrim-stats:
-  staging-stats:
-  assets:
-  master_dats:
-  staging_dats:
+  fo-data:
+  letsencrypt:

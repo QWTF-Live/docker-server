@@ -10,7 +10,7 @@ source "$DIR/shared"
 source_and_update () {
   source_docker_host "${1}"
   source_docker_compose_env "${1}"
-  docker compose exec updater /updater/sync.sh
+  docker compose exec fortressone /updater/sync.sh
 }
 
 for m in "${aws_machines[@]}"

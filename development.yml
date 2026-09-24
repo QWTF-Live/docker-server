@@ -8,7 +8,7 @@ services:
       - AWS_SECRET_ACCESS_KEY
       - AWS_ACCESS_KEY_ID
       - S3_DEMO_URI
-      - FO_REGION
+      - TF_REGION
     volumes:
       - assets:/updater/map-repo/fortress/
       - dev-dats:/updater/dats/dev/
@@ -27,13 +27,13 @@ services:
     tty: true
     restart: always
     command: |
-      -ip ${FO_IP}
+      -ip ${TF_IP}
       -port 27500
-      +set hostname "${FO_HOSTNAME} dev"
-      +set rcon_password "${FO_RCON_PASSWORD}"
-      +set sv_serverip "${FO_IP}"
-      +localinfo adminpwd "${FO_ADMINPWD}"
-      +localinfo discord_channel_id "${FO_DISCORD_CHANNEL_ID}"
+      +set hostname "${TF_HOSTNAME} dev"
+      +set rcon_password "${TF_RCON_PASSWORD}"
+      +set sv_serverip "${TF_IP}"
+      +localinfo adminpwd "${TF_ADMINPWD}"
+      +localinfo discord_channel_id "${TF_DISCORD_CHANNEL_ID}"
       +exec fo_quadmode.cfg
       +map 2fort5r
     volumes:
@@ -51,7 +51,7 @@ services:
     restart: always
     command: |
       30000 0.0.0.0
-      +set hostname "${FO_HOSTNAME} QWfwd"
+      +set hostname "${TF_HOSTNAME} QWfwd"
 volumes:
   dev-demos:
   dev-stats:
@@ -60,10 +60,10 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: ${FO_DEV_DATS_PATH}
+      device: ${TF_DEV_DATS_PATH}
   assets:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: ${FO_DEV_ASSETS_PATH}
+      device: ${TF_DEV_ASSETS_PATH}
