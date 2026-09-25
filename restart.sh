@@ -12,6 +12,12 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE_FILE="production.yml"
 
+# The hosts are 15GB and the map tree alone is over 7GB, so they run close to
+# full and the two things that creep are the journal and superseded images.
+# sydney was at 99% with 237M left; ireland at 96%. Neither had broken yet,
+# but a host that fills mid-pull or mid-migration fails in confusing ways.
+JOURNAL_KEEP="${JOURNAL_KEEP:-200M}"
+
 usage() {
   sed -n '3,8p' "$0" | sed 's/^# \{0,1\}//'
 }
@@ -117,6 +123,18 @@ stack_down() {
 }
 
 # Runs even under -f, so a forced restart still comes up on current code.
+# Before the pull, not after: a 973MB image cannot land on a host that is
+# already at 99%, and the failure that produces is a pull error rather than
+# anything that mentions disk. Dangling images only here - anything still
+# tagged might be what is currently running.
+echo "==> Reclaiming space"
+before_kb=$(df -Pk / | awk 'NR==2 {print $4}')
+sudo journalctl --vacuum-size="$JOURNAL_KEEP" >/dev/null 2>&1 \
+  || echo "        (journal vacuum failed)" >&2
+sudo docker image prune -f >/dev/null 2>&1 || true
+after_kb=$(df -Pk / | awk 'NR==2 {print $4}')
+echo "        $(( (after_kb - before_kb) / 1024 ))M reclaimed, $(( after_kb / 1024 ))M free"
+
 updated=false
 if check_updates; then
   updated=true
@@ -157,5 +175,14 @@ if $restart; then
   dc up -d
 fi
 
-# Always: clears the images the pull superseded, plus anything left dangling.
-sudo docker image prune -f
+# Now that the stack is up, anything not attached to a running container is
+# genuinely dead: the image the pull superseded, the busybox the migration
+# used, whatever an older layout left behind. -a rather than plain prune,
+# because those keep their tags and plain prune would never touch them - which
+# is how ireland and sydney each accumulated 1.4GB of them.
+#
+# The cost is that rolling back to the previous image means pulling it again.
+# On hosts this close to full that is the right trade.
+echo "==> Pruning images no longer in use"
+sudo docker image prune -a -f
+df -h / | awk 'NR==2 {print "        " $4 " free (" $5 " used)"}'
