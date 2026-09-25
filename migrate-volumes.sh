@@ -144,25 +144,41 @@ for m in "${MIGRATIONS[@]}"; do
   volume_exists "${PROJECT}_${name}" && to_copy+=("$m")
 done
 
-# Each source is freed as its copy lands, so the largest single one is the
-# high-water mark. Checked up front: running out mid-copy leaves a partial
-# destination alongside the source it came from.
+# The move unlinks each file as it lands, so the high-water mark is the
+# largest single FILE, not the largest volume. Checked up front all the same:
+# running out midway leaves the tree split across both volumes. --keep copies
+# instead of moving, so there it really is the whole volume.
 if ! $dry_run && [[ ${#to_copy[@]} -gt 0 ]]; then
   mounts=()
   for m in "${to_copy[@]}"; do
     name="${m%%|*}"
     mounts+=(-v "${PROJECT}_${name}:/old/${name}:ro")
   done
-  largest_kb=$("${DOCKER[@]}" run --rm "${mounts[@]}" "$HELPER" \
-    sh -c 'du -sk /old/* 2>/dev/null | sort -rn | head -1 | cut -f1' || echo 0)
+  if $keep; then
+    probe='du -sk /old/* 2>/dev/null | sort -rn | head -1 | cut -f1'
+    what="volume"
+  else
+    probe='find /old -type f -exec du -k {} + 2>/dev/null | sort -rn | head -1 | cut -f1'
+    what="file"
+  fi
+  largest_kb=$("${DOCKER[@]}" run --rm "${mounts[@]}" "$HELPER" sh -c "$probe" || echo 0)
+  [[ -n $largest_kb ]] || largest_kb=0
   root=$("${DOCKER[@]}" info -f '{{.DockerRootDir}}' 2>/dev/null || echo /var/lib/docker)
   free_kb=$(df -Pk "$root" | awk 'NR==2 {print $4}')
   need_kb=$(( largest_kb + largest_kb / 10 ))
-  say "--> Largest remaining volume $(( largest_kb / 1024 ))M, free $(( free_kb / 1024 ))M on $root"
+  say "--> Largest $what $(( largest_kb / 1024 ))M, free $(( free_kb / 1024 ))M on $root"
   if [[ $free_kb -lt $need_kb ]]; then
+    say "" >&2
     say "migrate-volumes: not enough space: need ~$(( need_kb / 1024 ))M free, have $(( free_kb / 1024 ))M" >&2
-    say "  the demo and stats volumes have already been freed; if this still" >&2
-    say "  does not fit, drop the map volume too and let the updater re-sync:" >&2
+    say "" >&2
+    say "  Where the disk has gone:" >&2
+    "${DOCKER[@]}" system df >&2 || true
+    say "" >&2
+    say "  Reclaim the obvious first:" >&2
+    say "    docker system prune -a -f          # every image nothing is running" >&2
+    say "" >&2
+    say "  If it still will not fit, the map tree is the only thing left here" >&2
+    say "  and it is refetchable - drop it and let the updater re-sync:" >&2
     say "    docker volume rm ${PROJECT}_assets" >&2
     exit 1
   fi
@@ -174,41 +190,74 @@ for m in "${to_copy[@]}"; do
   old="${PROJECT}_${name}"
   say "--> ${name} -> /srv/${dest}"
 
-  # tar rather than cp: busybox `cp -n` silently copies nothing at all, and
-  # `cp -a /src/.` cannot decline to overwrite. tar -xk keeps whatever is
-  # already at the destination, so an interrupted run resumes instead of
-  # replacing newer files with older ones, and dotfiles, symlinks and
-  # permissions all survive.
-  #
-  # The copy is verified rather than trusted: this deletes the source
-  # afterwards, so "the container exited 0" is not good enough.
-  if run "${DOCKER[@]}" run --rm \
-       -v "${old}:/src:ro" \
+  if $dry_run; then
+    say "    would: move the contents of ${old} into /srv/${dest} and remove it"
+    migrated+=("$old")
+    continue
+  fi
+
+  if $keep; then
+    # Copy, leaving the source untouched. Needs room for a full second copy -
+    # that is the price of being able to roll back.
+    #
+    # tar rather than cp: busybox `cp -n` silently copies nothing at all, and
+    # `cp -a /src/.` cannot decline to overwrite. tar -xk keeps whatever is
+    # already at the destination, so an interrupted run resumes.
+    ok=false
+    "${DOCKER[@]}" run --rm -v "${old}:/src:ro" -v "${PROJECT}_tf-data:/dst" \
+      "$HELPER" sh -c "
+        set -e
+        mkdir -p '/dst/${dest}'
+        tar cf - -C /src . | tar xkf - -C '/dst/${dest}'
+        cd /src
+        missing=0
+        for f in \$(find . -type f); do
+          [ -e \"/dst/${dest}/\$f\" ] || { echo \"missing: \$f\" >&2; missing=1; }
+        done
+        exit \$missing" && ok=true
+    if $ok; then
+      migrated+=("$old")
+      say "    copied (source kept)"
+    else
+      say "    ! copy incomplete; keeping ${old}"
+    fi
+    continue
+  fi
+
+  # Move one file at a time, unlinking each as it lands, so the source shrinks
+  # as the destination grows. A bulk copy needs room for the whole tree twice
+  # over, which is what california does not have; this needs room for the
+  # largest single file. Slower - it is still a real copy per file, since the
+  # two volumes are separate mounts inside the container - but the high-water
+  # mark is what matters here, not the throughput.
+  if "${DOCKER[@]}" run --rm -i \
+       -v "${old}:/src" \
        -v "${PROJECT}_tf-data:/dst" \
-       "$HELPER" sh -c "
-         set -e
-         mkdir -p '/dst/${dest}'
-         tar cf - -C /src . | tar xkf - -C '/dst/${dest}'
-         missing=0
-         cd /src
-         for f in \$(find . -type f); do
-           [ -e \"/dst/${dest}/\$f\" ] || { echo \"missing: \$f\" >&2; missing=1; }
-         done
-         exit \$missing"
+       "$HELPER" sh -s "$dest" <<'INNER'
+set -e
+dest=$1
+mkdir -p "/dst/$dest"
+cd /src
+find . \( -type f -o -type l \) | while IFS= read -r f; do
+  mkdir -p "/dst/$dest/$(dirname "$f")"
+  if [ -e "/dst/$dest/$f" ]; then
+    rm -f "$f"                      # an earlier run already moved it
+  else
+    cp -a "$f" "/dst/$dest/$f" && rm -f "$f"
+  fi
+done
+left=$(find . \( -type f -o -type l \) | wc -l)
+[ "$left" -eq 0 ] || { echo "$left file(s) could not be moved" >&2; exit 1; }
+INNER
   then
     migrated+=("$old")
-    # Freed here rather than after the loop: holding every source and a
-    # complete second copy at once needs twice the total, which is how
-    # california ran out of disk.
-    if $keep; then
-      :
-    elif "${DOCKER[@]}" volume rm "$old" >/dev/null 2>&1; then
-      say "    copied and removed"
+    if "${DOCKER[@]}" volume rm "$old" >/dev/null 2>&1; then
+      say "    moved and removed"
     else
-      say "    ! copied, but could not remove ${old} (still in use?)"
+      say "    ! moved, but could not remove ${old} (still in use?)"
     fi
   else
-    say "    ! copy incomplete; keeping ${old}"
+    say "    ! move incomplete; keeping ${old}"
   fi
 done
 
