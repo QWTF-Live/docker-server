@@ -95,6 +95,48 @@ if ! $dry_run; then
   "${DOCKER[@]}" pull --quiet "$HELPER" >/dev/null
 fi
 
+# The old server and updater images are superseded by qwtflive/fortressone,
+# which has both inside it. restart.sh would never reclaim them: `image prune`
+# without -a only drops dangling images, and these keep their tags. Removing
+# them here frees the space BEFORE the copy needs it, which matters on a host
+# that is already tight.
+#
+# Only when the old volumes are going too: with --keep the point is to stay
+# able to roll back, and that needs the images.
+if ! $keep; then
+  for img in qwtflive/qwtfsv:latest qwtflive/updater:latest; do
+    "${DOCKER[@]}" image inspect "$img" >/dev/null 2>&1 || continue
+    say "--> Removing superseded image $img"
+    run "${DOCKER[@]}" image rm "$img" >/dev/null 2>&1 \
+      || say "    ! still in use; leaving it"
+  done
+fi
+
+# Copying needs room for one volume in duplicate - each is freed as it lands -
+# so the largest single one is the high-water mark. Checked rather than
+# discovered halfway through: a full disk mid-copy leaves both a partial
+# destination and the source it came from.
+if ! $dry_run; then
+  mounts=()
+  for m in "${MIGRATIONS[@]}"; do
+    vol="${PROJECT}_${m%%|*}"
+    volume_exists "$vol" && mounts+=(-v "${vol}:/old/${m%%|*}:ro")
+  done
+  if [[ ${#mounts[@]} -gt 0 ]]; then
+    largest_kb=$("${DOCKER[@]}" run --rm "${mounts[@]}" "$HELPER" \
+      sh -c 'du -sk /old/* 2>/dev/null | sort -rn | head -1 | cut -f1' || echo 0)
+    root=$("${DOCKER[@]}" info -f '{{.DockerRootDir}}' 2>/dev/null || echo /var/lib/docker)
+    free_kb=$(df -Pk "$root" | awk 'NR==2 {print $4}')
+    need_kb=$(( largest_kb + largest_kb / 10 ))   # +10% margin
+    say "--> Largest volume $(( largest_kb / 1024 ))M, free $(( free_kb / 1024 ))M on $root"
+    if [[ $free_kb -lt $need_kb ]]; then
+      say "migrate-volumes: not enough space: need ~$(( need_kb / 1024 ))M free, have $(( free_kb / 1024 ))M" >&2
+      say "  free some up (docker image prune -a) and re-run; nothing has been changed yet" >&2
+      exit 1
+    fi
+  fi
+fi
+
 migrated=()
 for m in "${MIGRATIONS[@]}"; do
   old="${PROJECT}_${m%%|*}"
@@ -127,6 +169,17 @@ for m in "${MIGRATIONS[@]}"; do
          exit \$missing"
   then
     migrated+=("$old")
+    # Removed here rather than after the whole loop: holding every old volume
+    # and a complete second copy of it at once needs twice the total data,
+    # which is how california ran out of disk. Freeing each one as it lands
+    # means never holding more than a single volume in duplicate.
+    if $keep; then
+      :
+    elif "${DOCKER[@]}" volume rm "$old" >/dev/null 2>&1; then
+      say "    copied and removed"
+    else
+      say "    ! copied, but could not remove ${old} (still in use?)"
+    fi
   else
     say "    ! copy incomplete; keeping ${old}"
   fi
@@ -148,21 +201,9 @@ if [[ -d /etc/letsencrypt ]]; then
 fi
 
 if $keep; then
-  say "==> Migrated; old volumes kept (--keep)"
-  exit 0
-fi
-
-if [[ ${#migrated[@]} -gt 0 ]]; then
-  say "--> Removing ${#migrated[@]} migrated volume(s)"
-  for old in "${migrated[@]}"; do
-    if $dry_run; then
-      say "    would remove $old"
-    elif "${DOCKER[@]}" volume rm "$old" >/dev/null 2>&1; then
-      say "    removed $old"
-    else
-      say "    ! could not remove $old (still in use?)"
-    fi
-  done
+  say "==> Migrated; ${#migrated[@]} old volume(s) kept (--keep)"
+else
+  say "==> Migrated and removed ${#migrated[@]} old volume(s)"
 fi
 
 say "==> Done"
