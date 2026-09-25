@@ -136,6 +136,24 @@ fi
 
 if $restart; then
   dc down --remove-orphans
+
+  # Between the two, not before either: the old volumes have to be free, and
+  # the stack must not come up until their contents have been folded into
+  # tf-data. Starting on an empty one is not a failure that announces itself -
+  # the updater just re-syncs the entire map bucket from S3 and carries on, so
+  # the only symptom is a slow boot and a large bill.
+  #
+  # deploy calls this too, on a checkout it has just synced. This is the copy
+  # that covers a reboot, which runs restart.sh and nothing else. It is a no-op
+  # once there is nothing left to move.
+  # Never fatal. A migration that cannot finish - no disk, a volume still
+  # held - is a bad day; five game servers staying down because of it is a
+  # worse one. Say so loudly and come up anyway, re-syncing what is missing.
+  if [[ -x "$REPO_DIR/migrate-volumes.sh" ]]; then
+    "$REPO_DIR/migrate-volumes.sh" \
+      || echo "migrate-volumes: FAILED - starting anyway, the updater will re-sync from S3" >&2
+  fi
+
   dc up -d
 fi
 
